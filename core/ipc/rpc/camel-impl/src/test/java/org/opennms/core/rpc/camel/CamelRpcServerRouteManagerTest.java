@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2016 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2016 The OpenNMS Group, Inc.
+ * Copyright (C) 2017 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2017 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -26,28 +26,22 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.core.rpc.api;
+package org.opennms.core.rpc.camel;
 
-/**
- * The request of an RPC call.
- *
- * @author jwhite
- */
-public interface RpcRequest {
+import static org.junit.Assert.assertEquals;
 
-    /**
-     * Used to route the request to the appropriate location.
-     */
-    String getLocation();
+import org.junit.Test;
 
-    /**
-     * Used to route the request to a particular system at the given location.
-     */
-    String getSystemId();
+public class CamelRpcServerRouteManagerTest {
 
-    /**
-     * When using JMS, the request will fail if no response was received in this
-     * many milliseconds.
-     */
-    Long getTimeToLiveMs();
+    @Test
+    public void getJmsSelectorTest() {
+        // Standard system id
+        assertEquals("SystemId='000-000' OR SystemId IS NULL", CamelRpcServerRouteManager.getJmsSelector("000-000"));
+        // Verify that single quotes are escaped
+        assertEquals("SystemId='\\'' OR SystemId IS NULL", CamelRpcServerRouteManager.getJmsSelector("'"));
+        // Null system id
+        assertEquals("SystemId IS NULL", CamelRpcServerRouteManager.getJmsSelector(null));
+    }
+
 }

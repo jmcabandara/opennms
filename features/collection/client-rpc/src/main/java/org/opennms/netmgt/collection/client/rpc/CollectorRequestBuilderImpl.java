@@ -48,6 +48,8 @@ public class CollectorRequestBuilderImpl implements CollectorRequestBuilder {
 
     private CollectionAgent agent;
 
+    private String systemId;
+
     private ServiceCollector serviceCollector;
 
     private Long ttlInMs;
@@ -59,6 +61,12 @@ public class CollectorRequestBuilderImpl implements CollectorRequestBuilder {
     @Override
     public CollectorRequestBuilder withAgent(CollectionAgent agent) {
         this.agent = agent;
+        return this;
+    }
+
+    @Override
+    public CollectorRequestBuilder withSystemId(String systemId) {
+        this.systemId = systemId;
         return this;
     }
 
@@ -102,6 +110,7 @@ public class CollectorRequestBuilderImpl implements CollectorRequestBuilder {
 
         CollectorRequestDTO request = new CollectorRequestDTO();
         request.setLocation(serviceCollector.getEffectiveLocation(agent.getLocationName()));
+        request.setSystemId(systemId);
         request.setClassName(serviceCollector.getClass().getCanonicalName());
         request.setTimeToLiveMs(ttlInMs);
 

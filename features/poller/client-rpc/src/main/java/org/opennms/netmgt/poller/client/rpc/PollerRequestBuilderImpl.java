@@ -45,6 +45,8 @@ public class PollerRequestBuilderImpl implements PollerRequestBuilder {
 
     private MonitoredService service;
 
+    private String systemId;
+
     private ServiceMonitor serviceMonitor;
 
     private LocationAwarePollerClientImpl client;
@@ -62,6 +64,12 @@ public class PollerRequestBuilderImpl implements PollerRequestBuilder {
     @Override
     public PollerRequestBuilder withService(MonitoredService service) {
         this.service = service;
+        return this;
+    }
+
+    @Override
+    public PollerRequestBuilder withSystemId(String systemId) {
+        this.systemId = systemId;
         return this;
     }
 
@@ -111,6 +119,7 @@ public class PollerRequestBuilderImpl implements PollerRequestBuilder {
 
         final PollerRequestDTO request = new PollerRequestDTO();
         request.setLocation(serviceMonitor.getEffectiveLocation(service.getNodeLocation()));
+        request.setSystemId(systemId);
         request.setClassName(serviceMonitor.getClass().getCanonicalName());
         request.setServiceName(service.getSvcName());
         request.setAddress(service.getAddress());
