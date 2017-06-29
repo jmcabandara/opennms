@@ -214,12 +214,17 @@ public class HeartbeatConsumer implements MessageConsumer<MinionIdentityDTO, Min
 
         RequisitionNode requisitionNode = nextRequisition.getNode(minion.getId());
         if (requisitionNode == null) {
-            final RequisitionMonitoredService requisitionMonitoredService = new RequisitionMonitoredService();
-            requisitionMonitoredService.setServiceName("Minion-Heartbeat");
-
             final RequisitionInterface requisitionInterface = new RequisitionInterface();
             requisitionInterface.setIpAddr("127.0.0.1");
-            requisitionInterface.putMonitoredService(requisitionMonitoredService);
+
+            final RequisitionMonitoredService heartbeatService = new RequisitionMonitoredService();
+            heartbeatService.setServiceName("Minion-Heartbeat");
+            requisitionInterface.putMonitoredService(heartbeatService);
+
+            // TODO: How to update existing Minion nodes with this service?
+            final RequisitionMonitoredService rpcService = new RequisitionMonitoredService();
+            rpcService.setServiceName("Minion-RPC");
+            requisitionInterface.putMonitoredService(rpcService);
 
             requisitionNode = new RequisitionNode();
             requisitionNode.setNodeLabel(minion.getId());
