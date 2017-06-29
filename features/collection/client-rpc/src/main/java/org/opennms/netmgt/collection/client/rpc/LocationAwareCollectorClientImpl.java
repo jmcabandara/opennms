@@ -35,6 +35,7 @@ import org.opennms.core.rpc.api.RpcClientFactory;
 import org.opennms.netmgt.collection.api.CollectorRequestBuilder;
 import org.opennms.netmgt.collection.api.LocationAwareCollectorClient;
 import org.opennms.netmgt.collection.api.ServiceCollectorRegistry;
+import org.opennms.netmgt.dao.api.NodeDao;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -45,6 +46,9 @@ public class LocationAwareCollectorClientImpl implements LocationAwareCollectorC
 
     @Autowired
     private RpcClientFactory rpcClientFactory;
+
+    @Autowired
+    private NodeDao nodeDao;
 
     private RpcClient<CollectorRequestDTO, CollectorResponseDTO> delegate;
 
@@ -75,5 +79,13 @@ public class LocationAwareCollectorClientImpl implements LocationAwareCollectorC
 
     public ServiceCollectorRegistry getRegistry() {
         return rpcModule.getServiceCollectorRegistry();
+    }
+
+    public NodeDao getNodeDao() {
+        return nodeDao;
+    }
+
+    public void setNodeDao(NodeDao nodeDao) {
+        this.nodeDao = nodeDao;
     }
 }

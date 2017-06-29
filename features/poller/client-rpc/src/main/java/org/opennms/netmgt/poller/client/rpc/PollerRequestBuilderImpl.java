@@ -135,6 +135,11 @@ public class PollerRequestBuilderImpl implements PollerRequestBuilder {
         final Map<String, Object> parameters = request.getMonitorParameters();
         request.addAttributes(serviceMonitor.getRuntimeAttributes(request, parameters));
 
+        // FIXUP
+        if ("true".equals(parameters.get("use-foreign-id-as-system-id"))) {
+            request.setSystemId(client.getNodeDao().get(service.getNodeId()).getForeignId());
+        }
+
         // Execute the request
         return client.getDelegate().execute(request).thenApply(results -> {
             PollStatus pollStatus = results.getPollStatus();

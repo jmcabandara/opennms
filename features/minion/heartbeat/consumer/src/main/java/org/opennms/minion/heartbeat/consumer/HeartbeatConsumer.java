@@ -226,6 +226,10 @@ public class HeartbeatConsumer implements MessageConsumer<MinionIdentityDTO, Min
             rpcService.setServiceName("Minion-RPC");
             requisitionInterface.putMonitoredService(rpcService);
 
+            final RequisitionMonitoredService jmxService = new RequisitionMonitoredService();
+            jmxService.setServiceName("JMX-Minion");
+            requisitionInterface.putMonitoredService(jmxService);
+
             requisitionNode = new RequisitionNode();
             requisitionNode.setNodeLabel(minion.getId());
             requisitionNode.setForeignId(minion.getLabel() != null

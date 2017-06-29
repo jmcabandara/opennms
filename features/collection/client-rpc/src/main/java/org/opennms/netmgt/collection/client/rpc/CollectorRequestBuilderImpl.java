@@ -138,6 +138,11 @@ public class CollectorRequestBuilderImpl implements CollectorRequestBuilder {
             request.setAttributesNeedUnmarshaling(true);
         }
 
+        // FIXUP
+        if ("true".equals(allAttributes.get("use-foreign-id-as-system-id"))) {
+            request.setSystemId(client.getNodeDao().get(agent.getNodeId()).getForeignId());
+        }
+
         // Execute the request
         return client.getDelegate().execute(request).thenApply(results -> {
             return results.getCollectionSet();
