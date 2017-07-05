@@ -61,6 +61,7 @@
 
     <!-- OpenNMS OSGI Core -->
     <module>opennms-osgi-core</module>
+    <module>opennms-osgi-core-rest</module>
 
     <!-- JMX config generator -->
     <module>jmx-config-generator</module>
