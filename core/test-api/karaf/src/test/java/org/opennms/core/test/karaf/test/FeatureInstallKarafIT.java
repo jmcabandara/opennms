@@ -98,18 +98,16 @@ public class FeatureInstallKarafIT extends KarafTestCase {
      */
     @Test
     public void testInstallAllSpringFeatures() {
-        addFeaturesUrl(maven().groupId("org.apache.karaf.features").artifactId("spring-legacy").version("4.1.1").type("xml").classifier("features").getURL());
-
-        installFeature("spring", "4.2.9.RELEASE_1");
-        installFeature("spring-aspects", "4.2.9.RELEASE_1");
-        installFeature("spring-instrument", "4.2.9.RELEASE_1");
-        installFeature("spring-jdbc", "4.2.9.RELEASE_1");
-        installFeature("spring-jms", "4.2.9.RELEASE_1");
-        //installFeature("spring-test", "4.2.9.RELEASE_1");
-        installFeature("spring-orm", "4.2.9.RELEASE_1");
-        installFeature("spring-oxm", "4.2.9.RELEASE_1");
-        installFeature("spring-tx", "4.2.9.RELEASE_1");
-        installFeature("spring-web", "4.2.9.RELEASE_1");
+        installFeature("spring", "4.3.5.RELEASE_1");
+        installFeature("spring-aspects", "4.3.5.RELEASE_1");
+        installFeature("spring-instrument", "4.3.5.RELEASE_1");
+        installFeature("spring-jdbc", "4.3.5.RELEASE_1");
+        installFeature("spring-jms", "4.3.5.RELEASE_1");
+        //installFeature("spring-test", "4.3.5.RELEASE_1");
+        installFeature("spring-orm", "4.3.5.RELEASE_1");
+        installFeature("spring-oxm", "4.3.5.RELEASE_1");
+        installFeature("spring-tx", "4.3.5.RELEASE_1");
+        installFeature("spring-web", "4.3.5.RELEASE_1");
         //installFeature("spring-web-portlet");
         //installFeature("spring-websocket");
         //installFeature("spring-security");
