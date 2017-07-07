@@ -56,6 +56,7 @@ import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 import org.opennms.core.logging.Logging;
 import org.opennms.netmgt.correlation.AbstractCorrelationEngine;
+import org.opennms.netmgt.model.OnmsAlarm;
 import org.opennms.netmgt.xml.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,6 +95,13 @@ public class DroolsCorrelationEngine extends AbstractCorrelationEngine {
         final Gauge<Integer> pendingTasksCount = () -> { return getPendingTasksCount(); };
         metricRegistry.register(MetricRegistry.name(name, "pending-tasks-count"), pendingTasksCount);
         m_eventsMeter = metricRegistry.meter(MetricRegistry.name(name, "events"));
+    }
+
+    public synchronized void correlate(final OnmsAlarm alarm) {
+        LOG.debug("Begin correlation for Alarm {} uei: {}", alarm.getId(), alarm.getUei());
+        m_kieSession.insert(alarm);
+        if (!m_isStreaming) m_kieSession.fireAllRules();
+        LOG.debug("End correlation for Alarm {} uei: {}", alarm.getId(), alarm.getUei());
     }
 
     /** {@inheritDoc} */

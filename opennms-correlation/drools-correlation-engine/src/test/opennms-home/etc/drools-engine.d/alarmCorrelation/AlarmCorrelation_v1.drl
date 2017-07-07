@@ -1,0 +1,48 @@
+package org.opennms.netmgt.correlation.drools;
+import org.opennms.netmgt.correlation.drools.DroolsCorrelationEngine;
+import org.opennms.netmgt.xml.event.Event;
+import org.opennms.netmgt.xml.event.Parm;
+import org.opennms.netmgt.xml.event.Parms;
+import org.opennms.netmgt.xml.event.Value;
+import org.opennms.netmgt.model.events.EventBuilder;
+import org.opennms.netmgt.model.events.EventUtils;
+import org.opennms.netmgt.events.api.EventConstants;
+import org.opennms.netmgt.model.OnmsAlarm;
+import org.opennms.netmgt.correlation.drools.ProblemDomain;
+import org.opennms.netmgt.correlation.drools.AlarmCorrelationUtils;
+
+import java.util.ArrayList;
+import org.drools.core.spi.KnowledgeHelper;
+
+global DroolsCorrelationEngine engine;
+
+rule "first link down alarm received"
+when
+        $a : OnmsAlarm(uei matches "linkDown")
+        not( ProblemDomain(key == AlarmCorrelationUtils.getSegmentId($a)) )
+then
+        System.err.println("creating a new problem domain for: " + $a);
+        ProblemDomain p = new ProblemDomain(AlarmCorrelationUtils.getSegmentId($a));
+        p.addMember($a);
+        insert(p);
+        retract($a);
+end
+
+rule "another link down alarm received"
+when
+        $a : OnmsAlarm(uei matches "linkDown")
+        $p : ProblemDomain(key == AlarmCorrelationUtils.getSegmentId($a))
+then
+        System.err.println("adding link down to a problem domain: " + $a);
+        $p.addMember($a);
+        retract($a);
+end
+
+rule "multiple link downs are present in a problem domain"
+when
+	    $p : ProblemDomain(members.size() > 0)
+then
+	    System.err.println("correlating: " + $p);
+		AlarmCorrelationUtils.associate($p);
+		retract($p);
+end

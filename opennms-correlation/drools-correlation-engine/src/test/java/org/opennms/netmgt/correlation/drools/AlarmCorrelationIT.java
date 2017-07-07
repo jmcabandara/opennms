@@ -26,12 +26,15 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.alarmd;
+package org.opennms.netmgt.correlation.drools;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.concurrent.TimeUnit;
+
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
@@ -41,10 +44,9 @@ import org.opennms.netmgt.dao.api.DistPollerDao;
 import org.opennms.netmgt.model.OnmsAlarm;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
-import org.springframework.transaction.support.TransactionTemplate;
+import static com.jayway.awaitility.Awaitility.await;
 
 @RunWith(OpenNMSJUnit4ClassRunner.class)
 @ContextConfiguration(locations={
@@ -55,11 +57,13 @@ import org.springframework.transaction.support.TransactionTemplate;
         "classpath*:/META-INF/opennms/component-dao.xml",
         "classpath:/META-INF/opennms/applicationContext-daemon.xml",
         "classpath:/META-INF/opennms/mockEventIpcManager.xml",
-        "classpath:/META-INF/opennms/applicationContext-alarmd.xml"
+        "classpath:/META-INF/opennms/correlation-engine.xml",
+        "classpath:/test-context.xml"
 })
-@JUnitConfigurationEnvironment
+@JUnitConfigurationEnvironment(systemProperties={"org.opennms.activemq.broker.disable=true"})
 @JUnitTemporaryDatabase(reuseDatabase=false)
-public class AlarmImpactAssociationIT {
+@DirtiesContext
+public class AlarmCorrelationIT extends CorrelationRulesTestCase {
 
     @Autowired
     private AlarmDao m_alarmDao;
@@ -67,65 +71,29 @@ public class AlarmImpactAssociationIT {
     @Autowired
     private DistPollerDao m_distPollerDao;
 
-    @Autowired
-    private TransactionTemplate m_transactionTemplate;
-
     @Test
-    public void canAssociateImpactingAlarms() {
-        // Create a first alarms
-        final OnmsAlarm linkDownAlarmOnR1 = new OnmsAlarm();
+    public void canCorrelate() throws Exception {
+        DroolsCorrelationEngine engine = findEngineByName("alarmCorrelation");
+        Assert.assertNotNull(engine);
+
+        // Create and save a first alarm
+        OnmsAlarm linkDownAlarmOnR1 = new OnmsAlarm();
         linkDownAlarmOnR1.setDistPoller(m_distPollerDao.whoami());
         linkDownAlarmOnR1.setCounter(1);
         linkDownAlarmOnR1.setUei("linkDown");
+        m_alarmDao.save(linkDownAlarmOnR1);
+        engine.correlate(linkDownAlarmOnR1);
 
-        // Create a second alarm
-        final OnmsAlarm linkDownAlarmOnR2 = new OnmsAlarm();
+        // Create and save a second alarm
+        OnmsAlarm linkDownAlarmOnR2 = new OnmsAlarm();
         linkDownAlarmOnR2.setDistPoller(m_distPollerDao.whoami());
         linkDownAlarmOnR2.setCounter(1);
         linkDownAlarmOnR2.setUei("linkDown");
+        m_alarmDao.save(linkDownAlarmOnR2);
+        engine.correlate(linkDownAlarmOnR2);
 
-        // Save them and associate them together in one transaction
-        m_transactionTemplate.execute(new TransactionCallbackWithoutResult() {
-            @Override
-            protected void doInTransactionWithoutResult(TransactionStatus status) {
-                m_alarmDao.save(linkDownAlarmOnR1);
-                verifyInitialState(linkDownAlarmOnR1);
-
-                // Associate
-                associate(linkDownAlarmOnR1, linkDownAlarmOnR2);
-
-                // Verify
-                verifyAssociation(linkDownAlarmOnR1, linkDownAlarmOnR2);
-            }
-        });
-
-        m_transactionTemplate.execute(new TransactionCallbackWithoutResult() {
-            @Override
-            protected void doInTransactionWithoutResult(TransactionStatus status) {
-                // Now reload the entities
-                OnmsAlarm r1 = m_alarmDao.get(linkDownAlarmOnR1.getId());
-                OnmsAlarm r2 = m_alarmDao.get(linkDownAlarmOnR2.getId());
-
-                // And verify again
-                verifyAssociation(r1, r2);
-            }
-        });
-    }
-
-    void associate(OnmsAlarm cause, OnmsAlarm impacted) {
-        cause.getImpacts().add(impacted);
-        cause.setCause(true);
-        impacted.getCauses().add(cause);
-        impacted.setImpacted(true);
-        m_alarmDao.saveOrUpdate(cause);
-        m_alarmDao.saveOrUpdate(impacted);
-    }
-
-    void verifyInitialState(OnmsAlarm alarm) {
-        assertFalse("cause should default to false", alarm.isCause());
-        assertFalse("impacted should default to false", alarm.isImpacted());
-        assertEquals(0, alarm.getImpacts().size());
-        assertEquals(0, alarm.getCauses().size());
+        // R1 should be causing R2
+        await().atMost(5, TimeUnit.SECONDS).until(() -> verifyAssociation(linkDownAlarmOnR1, linkDownAlarmOnR2));
     }
 
     void verifyAssociation(OnmsAlarm cause, OnmsAlarm impacted) {
