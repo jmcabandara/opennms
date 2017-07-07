@@ -30,6 +30,7 @@ package org.opennms.netmgt.model;
 
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -77,7 +78,7 @@ import org.springframework.core.style.ToStringCreator;
 @Filter(name=FilterManager.AUTH_FILTER_NAME, condition="exists (select distinct x.nodeid from node x join category_node cn on x.nodeid = cn.nodeid join category_group cg on cn.categoryId = cg.categoryId where x.nodeid = nodeid and cg.groupId in (:userGroups))")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class OnmsAlarm implements Acknowledgeable, Serializable {
-    private static final long serialVersionUID = 7275548439687562161L;
+    private static final long serialVersionUID = 3;
     
     /** Constant <code>PROBLEM_TYPE=1</code> */
     public static final int PROBLEM_TYPE = 1;
@@ -195,6 +196,14 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
     
     private OnmsReductionKeyMemo m_reductionKeyMemo;
     
+    private boolean m_impacted = false;
+
+    private boolean m_cause = false;
+
+    private List<OnmsAlarm> m_impacts = new ArrayList<>();
+
+    private List<OnmsAlarm> m_causes = new ArrayList<>();
+
     /**
      * default constructor
      */
@@ -1161,5 +1170,44 @@ public class OnmsAlarm implements Acknowledgeable, Serializable {
     public Date getAckTime() {
         return m_alarmAckTime;
     }
-    
+
+    public void setImpacted(boolean impacted) {
+        m_impacted = impacted;
+    }
+
+    @Column(name="impacted")
+    @XmlAttribute(name="impacted")
+    public boolean isImpacted() {
+        return m_impacted;
+    }
+
+    public void setCause(boolean cause) {
+        m_cause = cause;
+    }
+
+    @Column(name="cause")
+    @XmlAttribute(name="cause")
+    public boolean isCause() {
+        return m_cause;
+    }
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @JoinTable(name = "impacted_alarms", joinColumns = @JoinColumn(name = "impacted_alarmid", referencedColumnName = "alarmid"))
+    public List<OnmsAlarm> getImpacts() {
+        return m_impacts;
+    }
+
+    public void setImpacts(List<OnmsAlarm> impacts) {
+        m_impacts = impacts;
+    }
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @JoinTable(name = "impacted_alarms", joinColumns = @JoinColumn(name = "cause_alarmid", referencedColumnName = "alarmid"))
+    public List<OnmsAlarm> getCauses() {
+        return m_causes;
+    }
+
+    public void setCauses(List<OnmsAlarm> causes) {
+        m_causes = causes;
+    }
 }

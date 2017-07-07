@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+  <changeSet author="jwhite" id="21.0.0-alarm-correlation">
+    <addColumn tableName="alarms">
+      <column name="cause" type="boolean" defaultValue="false">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+    <addColumn tableName="alarms">
+      <column name="impacted" type="boolean" defaultValue="false">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+    <createTable tableName="impacted_alarms">
+      <column name="cause_alarmid" type="integer">
+        <constraints nullable="false"/>
+      </column>
+      <column name="impacted_alarmid" type="integer">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+    <addUniqueConstraint tableName="impacted_alarms" columnNames="cause_alarmid, impacted_alarmid"/>
+    <addForeignKeyConstraint constraintName="fk_impacted_alarms_cause_alarm_id" baseTableName="impacted_alarms" baseColumnNames="cause_alarmid" referencedTableName="alarms" referencedColumnNames="alarmid"/>
+    <addForeignKeyConstraint constraintName="fk_impacted_alarms_impacted_alarmid" baseTableName="impacted_alarms" baseColumnNames="impacted_alarmid" referencedTableName="alarms" referencedColumnNames="alarmid"/>
+  </changeSet>
+</databaseChangeLog>
